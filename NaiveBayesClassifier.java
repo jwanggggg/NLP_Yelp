@@ -26,7 +26,7 @@ public class NaiveBayesClassifier {
 		
 		// Hash the stopwords
 		
-		while ((line = sWordReader.readLine()) != null)
+		while ((line = sWordReader.readLine()) != null) 
 			stopwordsStr.add(line);
 		
 		sWordReader.close();
@@ -82,6 +82,9 @@ public class NaiveBayesClassifier {
 		}
 		trainReader.close();
 		
+		// Record true positives/negatives to calculate
+		// accuracy/precision/recall/fscore
+		
 		int truePositive = 0;
 		int falsePositive = 0; 
 		int falseNegative = 0; 
@@ -92,7 +95,7 @@ public class NaiveBayesClassifier {
 			StringTokenizer st = new StringTokenizer(line, " :");
 			int stars = Integer.parseInt(st.nextToken());
 			
-			// Save the actual number of stars, and compare to calculated at the end 
+			// Save the actual number of stars, and compare to calculated at the end for true/false pos/neg
 			int actual = stars >= 3 ? 1 : 0;
 			
 			double probOfPos = Math.log(posReviews / (posReviews + negReviews + 0.0));
@@ -101,18 +104,20 @@ public class NaiveBayesClassifier {
 			while(st.hasMoreTokens()) {
 				int word = Integer.parseInt(st.nextToken());
 				int freq = Integer.parseInt(st.nextToken());
-//				freq = binaryNB ? 1 : freq;
+
 				if(stopwords.contains(word)) continue;
-				probOfPos += freq*Math.log((posWords[word]+1)/(wordsInPosReviews+distinctWords+0.0));
-				probOfNeg += freq*Math.log((negWords[word]+1)/(wordsInNegReviews+distinctWords+0.0));
+				// freq * log(neg or pos words[word] + 1)/ (words in respective review + distinct words)
+				probOfPos += freq * Math.log((posWords[word]+1) / (wordsInPosReviews + distinctWords + 0.0));
+				probOfNeg += freq * Math.log((negWords[word]+1) / (wordsInNegReviews + distinctWords + 0.0));
 			}
 			
 			System.out.println("Prob of pos: " + probOfPos);
 			System.out.println("Prob of neg: " + probOfNeg);
 			
 			int predicted = (probOfPos > probOfNeg ? 1 : 0);
+			String result = (predicted == 1 ? "Positive" : "Negative");
 			
-			System.out.println("Sentiment: " + predicted+"\n");
+			System.out.println("Sentiment: " + result +"\n");
 			
 			if(predicted == actual)
 				correctClassification++;
@@ -127,14 +132,19 @@ public class NaiveBayesClassifier {
 				falsePositive++;
 		}
 		testReader.close();
-		
+		// Accuracy: correct/total
 		double accuracy = correctClassification/(correctClassification + incorrectClassification + 0.0);
+		// Precision:  true positive/true positive + false positive
 		double precision = truePositive/(truePositive + falsePositive + 0.0);
+		// Recall: true positive/true positive + false negative
 		double recall = truePositive/(truePositive + falseNegative + 0.0);
+		// F-score: 2pr/(p+r)
 		double fscore = 2*precision*recall/(precision + recall);
 		
-		System.out.println("Accuracy="+accuracy+"\nPrecision="+precision+" Recall="+recall+" F-Score="+fscore);
-		
+		System.out.println("Accuracy: "+accuracy);
+		System.out.println("Precision: " + precision);
+		System.out.println("Recall: " + recall);
+		System.out.println("F-Score: " + fscore);
 	}
 	
 }
